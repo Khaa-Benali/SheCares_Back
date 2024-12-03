@@ -1,3 +1,4 @@
+
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const UserModel = require("../Models/User");
@@ -5,7 +6,8 @@ const UserModel = require("../Models/User");
 
 const signup = async (req, res) => {
     try {
-        const { fullname, email, password, age, dateOfBirth, medicalHistory, lifeStyleFactors, regularCheckups, recentBreastChanges, breastChangeDescription, isMother } = req.body;
+        console.log('Signup request received:', req.body);
+        const { fullname, email, password, dateOfBirth, medicalHistory, lifeStyleFactors, regularCheckups, recentBreastChanges, breastChangeDescription, isMother } = req.body;
 
         // Vérifie si l'utilisateur existe déjà
         const user = await UserModel.findOne({ email });
@@ -15,17 +17,26 @@ const signup = async (req, res) => {
 
         // Crée un nouveau modèle utilisateur
         const userModel = new UserModel({
-            fullname,
-            email,
+            fullname, 
+            email, 
             password: await bcrypt.hash(password, 10), // Hachage du mot de passe
-            age,
-            dateOfBirth,
-            medicalHistory,
-            lifeStyleFactors,
-            regularCheckups,
-            recentBreastChanges,
-            breastChangeDescription,
-            isMother
+            dateOfBirth: new Date(dateOfBirth), // Conversion de la date
+            medicalHistory: {
+                hasBreastCancerHistory: medicalHistory?.hasBreastCancerHistory ?? false,
+                familyBreastCancerHistory: medicalHistory?.familyBreastCancerHistory ?? false,
+                lastMammogramDate: medicalHistory?.lastMammogramDate ? new Date(medicalHistory.lastMammogramDate) : null,
+                notes: medicalHistory?.notes ?? ""
+            },
+            lifeStyleFactors: {
+                alcohol: lifeStyleFactors?.alcohol ?? false,
+                smoking: lifeStyleFactors?.smoking ?? false,
+                lowPhysicalActivity: lifeStyleFactors?.lowPhysicalActivity ?? false,
+                none: lifeStyleFactors?.none ?? false
+            },
+            regularCheckups: regularCheckups ?? false,
+            recentBreastChanges: recentBreastChanges ?? false,
+            breastChangeDescription: breastChangeDescription ?? "",
+            isMother: isMother ?? false
         });
 
         await userModel.save();
@@ -35,7 +46,7 @@ const signup = async (req, res) => {
             success: true
         });
     } catch (err) {
-        console.error(err); // Ajoute cette ligne pour plus de détails sur l'erreur
+        console.error('Signup error:', err); // Ajoute cette ligne pour plus de détails sur l'erreur
         res.status(500).json({
             message: "Internal server error",
             success: false

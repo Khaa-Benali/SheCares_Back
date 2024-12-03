@@ -2,35 +2,38 @@ const Joi = require('joi');
 
 const signupValidation = (req, res, next) => {
     const schema = Joi.object({
-        fullname: Joi.string().min(3).max(100).required(), // Changement de 'name' à 'fullname'
+        fullname: Joi.string().min(3).max(100).required(),
         email: Joi.string().email().required(),
         password: Joi.string().min(4).max(100).required(),
-        age: Joi.number().integer().min(0).required(), // Ajout de l'âge
-        dateOfBirth: Joi.date().required(), // Ajout de la date de naissance
+        dateOfBirth: Joi.date().required(), // Assurez-vous que la date est bien envoyée
         medicalHistory: Joi.object({
-            hasBreastCancerHistory: Joi.boolean(),
-            familyBreastCancerHistory: Joi.boolean(),
-            lastMammogramDate: Joi.date().allow(null),
-            notes: Joi.string().allow('').optional() // Permet un champ optionnel
-        }).optional(), // Rendre cette section optionnelle
+            hasBreastCancerHistory: Joi.boolean().default(false), // Défaut à false
+            familyBreastCancerHistory: Joi.boolean().default(false), // Défaut à false
+            lastMammogramDate: Joi.date().allow(null).optional(), // Peut être null ou une date
+            notes: Joi.string().allow('').optional() // Peut être une chaîne vide
+        }).optional(),
         lifeStyleFactors: Joi.object({
-            alcohol: Joi.boolean().default(false),
-            smoking: Joi.boolean().default(false),
-            lowPhysicalActivity: Joi.boolean().default(false),
-            none: Joi.boolean().default(true)
-        }).optional(), // Rendre cette section optionnelle
-        regularCheckups: Joi.boolean().optional(), // Champ optionnel
-        recentBreastChanges: Joi.boolean().optional(), // Champ optionnel
-        breastChangeDescription: Joi.string().allow('').optional(), // Champ optionnel
-        isMother: Joi.boolean().optional() // Champ optionnel
+            alcohol: Joi.boolean().default(false), // Défaut à false
+            smoking: Joi.boolean().default(false), // Défaut à false
+            lowPhysicalActivity: Joi.boolean().default(false), // Défaut à false
+            none: Joi.boolean().default(false) // Défaut à false
+        }).optional(),
+        regularCheckups: Joi.boolean().optional(),
+        recentBreastChanges: Joi.boolean().optional(),
+        breastChangeDescription: Joi.string().allow('').optional(),
+        isMother: Joi.boolean().optional()
     });
 
-    const { error } = schema.validate(req.body);
+    const { error } = schema.validate(req.body, { abortEarly: false }); // Valide tous les champs, pas juste le premier qui échoue
+
     if (error) {
-        return res.status(400).json({ message: "Bad request", error: error.details[0].message });
+        const errorMessages = error.details.map(detail => detail.message); // Collecte tous les messages d'erreur
+        return res.status(400).json({ message: "Bad request", errors: errorMessages });
     }
+
     next();
 };
+
 
 const loginValidation = (req, res, next) => {
     const schema = Joi.object({
@@ -48,7 +51,6 @@ const updateUserValidation = (req, res, next) => {
     const schema = Joi.object({
         fullname: Joi.string().min(3).max(100).optional(), // Champ optionnel
         email: Joi.string().email().optional(), // Champ optionnel
-        age: Joi.number().integer().min(0).optional(), // Champ optionnel
         dateOfBirth: Joi.date().optional(), // Champ optionnel
         medicalHistory: Joi.object({
             hasBreastCancerHistory: Joi.boolean().optional(),

@@ -1,6 +1,26 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
-
+const AppointmentSchema = new Schema({
+    date: {
+        type: Date,
+        required: true,
+    },
+    title: {
+        type: String,
+        required: true,
+        trim: true,
+    },
+    doctor: {
+        type: String,
+        trim: true,
+        default: "",
+    },
+    location: {
+        type: String,
+        trim: true,
+        default: "",
+    },
+});
 const UserSchema = new Schema({
     fullname: {
         type: String,
@@ -14,10 +34,6 @@ const UserSchema = new Schema({
     },
     password: {
         type: String,
-        required: true
-    },
-    age: {
-        type: Number,
         required: true
     },
     dateOfBirth: {
@@ -39,7 +55,8 @@ const UserSchema = new Schema({
         },
         notes: {
             type: String,
-            trim: true
+            trim: true,
+            default: ""
         }
     },
     lifeStyleFactors: {
@@ -76,6 +93,10 @@ const UserSchema = new Schema({
     isMother: {
         type: Boolean,
         default: false // Indique si l'utilisateur est une mère ou non
+    },
+    appointments: {
+        type: [AppointmentSchema], // Tableau de rendez-vous
+        default: [],
     },
     createdAt: {
         type: Date,
